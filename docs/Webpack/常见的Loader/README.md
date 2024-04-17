@@ -1,0 +1,15 @@
+# 有哪些常见的 loader
+- babel-loader：将 ES6 代码转换为 ES5 代码
+- css-loader：加载 CSS 文件，并且支持模块化、压缩、文件导入等特性
+- less-loader：将 Less 代码转换为 CSS 代码
+- sass-loader：将 SCSS/SASS 代码转换成 CSS 代码
+- style-loader：把 CSS 代码注入到 JavaScript 中，通过 DOM 操作去加载 CSS
+- stylus-loader：将 Stylus 代码转换成 CSS 代码
+- postcss-loader：扩展 CSS 语法，使用下一代 CSS，可以配合 autoprefixer 插件自动补齐 CSS3 前缀
+- file-loader：将文件输出到一个文件夹中，在代码中通过相对 URL 去引用输出的文件
+- url-loader：与 file-loader 类似，但是能在文件很小的情况下以 base64 的方式把文件内容注入到代码中去
+- source-map-loader：加载额外的 Source Map 文件，以方便断点调试
+- eslint-loader：通过 ESLint 检查 JavaScript 代码
+- tslint-loader：通过 TSLint 检查 TypeScript 代码
+- ts-loader：把 TS 代码转换成 JS 代码
+- vue-loader：加载 Vue.js 单文件组件

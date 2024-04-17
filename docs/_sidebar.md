@@ -1,11 +1,16 @@
-<!--
- * @Author: juguohong juguohong@flashhold.com
- * @Date: 2023-11-28 22:57:46
- * @LastEditors: juguohong juguohong@flashhold.com
- * @LastEditTime: 2023-11-28 23:15:31
- * @FilePath: /frontEndTechnicalAnalysis/docs/_sidebar.md
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
--->
 * [首页](/)
-* [javascript](javascript/README.md)
-* [react](react/README.md)
+* JavaScript
+  * [箭头函数](JavaScript/箭头函数/README.md)
+  * [Promise](JavaScript/promise/README.md)
+
+* [React](React/README.md)
+* Webpack
+  * [常见的Loader](Webpack/常见的Loader/README.md)
+  * [常见的Plugin](Webpack/常见的Plugin/README.md)
+  * [Loader和Plugin的区别](Webpack/Loader和Plugin的区别/README.md)
+  * [Webpack构建流程](Webpack/Webpack构建流程/README.md)
+  * [Babel原理](Webpack/Babel原理/README.md)
+  * [编写Loader的思路](Webpack/编写Loader的思路/README.md)
+  * [编写Plugin的思路](Webpack/编写Plugin的思路/README.md)
+  * [文件指纹](Webpack/文件指纹/README.md)
+  * [优化Webpack的构建速度](Webpack/优化Webpack的构建速度/README.md)

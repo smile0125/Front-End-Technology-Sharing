@@ -1,5 +1,4 @@
-# javascript
-## 箭头函数
+# 箭头函数
 ```javascript
 ()=>{}
 ```

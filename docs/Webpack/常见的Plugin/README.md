@@ -1,0 +1,17 @@
+# 有哪些常见的 plugin
+- html-webpack-plugin：打包结束后，自动生成一个 HTML 文件，并把打包生成的 JS 文件自动引入到 HTML 中
+- clean-webpack-plugin：打包前，先删除上次打包生成的文件
+- mini-css-extract-plugin：将 CSS 从 bundle 文件里提取成一个独立的 CSS 文件
+- optimize-css-assets-webpack-plugin：通过 CSS 代码的压缩来优化 CSS 代码
+- terser-webpack-plugin：通过 `terser` 压缩 JS 代码
+- webpack-bundle-analyzer-plugin：可视化查看 bundle 内容
+- speed-measure-webpack-plugin：分析出打包过程中所花费的时间，帮助找到打包的优化点 
+- webpack-merge：合并 webpack 配置
+- copy-webpack-plugin：拷贝文件到打包目录
+- ignore-plugin：忽略部分文件
+- case-sensitive-paths-webpack-plugin：在 Linux 系统中，对路径是否区分大小写进行配置
+- add-asset-html-webpack-plugin：将静态资源注入到 HTML 中
+- webpack-dashboard-plugin：一个可以用来展示 webpack 打包进度的面板
+- webpack-dev-server：一个开发服务器，它可以帮助我们快速搭建本地开发环境
+- webpack-hot-middleware：一个热更新的中间件
+- webpack-manifest-plugin：生成一个 manifest.json 文件，用来记录打包后的文件和它们的 ID 之间的映射关系
