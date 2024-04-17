@@ -8,5 +8,5 @@
 ![Static Badge](https://img.shields.io/badge/https%3A%2F%2Fwww.npmjs.com%2F~smile0125)
 
 
-[Get Started](javascript/箭头函数/README.md)
+[Get Started](JavaScript/箭头函数/README.md)
 [NPM](https://www.npmjs.com/~smile0125)
