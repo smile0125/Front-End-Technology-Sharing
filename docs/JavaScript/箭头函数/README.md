@@ -1,9 +1,37 @@
-# 箭头函数
+## 对箭头函数的理解
+箭头函数是ES6新增的语法，它和普通函数相比，有以下特点：
+
+- 箭头函数没有自己的this，箭头函数的this继承自外层代码块的this。
+- 箭头函数没有arguments，箭头函数的arguments继承自外层代码块的arguments。
+- 箭头函数不能用作构造函数。
+- 箭头函数没有原型对象。
+
+箭头函数的这些特点使得它在一些场景下非常有用，例如在需要使用this的地方，或者需要使用arguments的地方。
+
+## 箭头函数的语法
+箭头函数的语法非常简单，只需要使用箭头（=>）来表示函数的定义。例如：
+
 ```javascript
-()=>{}
+const add = (a, b) => {
+  return a + b;
+}
 ```
 
-```html
-<p>This is a paragraph</p>
-<a href="//docsify.js.org/">Docsify</a>
+箭头函数的语法非常简单，只需要使用箭头（=>）来表示函数的定义。例如：
+
+```javascript
+  const add = (a, b) => a + b;
+  const square = x => x * x;
+  const doNothing = () => {};
 ```
+
+## 箭头函数的注意事项
+箭头函数有一些需要注意的地方，例如：
+
+- 箭头函数不能用作构造函数。
+- 箭头函数没有自己的this，箭头函数的this继承自外层代码块的this。
+- 箭头函数没有原型对象。
+- 箭头函数不能使用arguments。
+- 箭头函数不能使用yield关键字。
+- 箭头函数不能使用new.target关键字。
+- 箭头函数不能使用super关键字。

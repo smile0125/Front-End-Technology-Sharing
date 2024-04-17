@@ -1,5 +1,0 @@
-# react
-## Hooks
-```javascript
-useEffect(()=>{},[]);
-```
