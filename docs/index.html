@@ -9,7 +9,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
     />
-    <link rel="icon" type="image/png" href="./icon48.png">
+    <link rel="icon" type="image/png" href="./icon48.png" />
     <link
       rel="stylesheet"
       href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css"
@@ -23,13 +23,16 @@
     <div id="app">加载中</div>
     <script>
       window.$docsify = {
-        name: "前端技术分享",
+        name: "前端技术分享", // 文档标题，会显示在侧边栏顶部
+        logo: "./icon48.png", // 在侧边栏中出现的网站图标
         repo: "https://github.com/smile0125",
         loadSidebar: true,
         subMaxLevel: 2,
         loadNavbar: true,
         coverpage: true,
         onlyCover: true,
+        auto2top: true, // 切换页面后是否自动跳转到页面顶部。
+        mergeNavbar: true, // 小屏设备下合并导航栏到侧边栏。
       };
     </script>
     <!-- Docsify v4 -->
