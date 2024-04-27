@@ -52,18 +52,22 @@ class MyPromise {
 
   // 判断是否是Promise
   #isPromiseLike(value) {
-    return value !== null && (typeof value === 'object' || typeof value === 'function') && typeof value.then === 'function';
+    return (
+      value !== null &&
+      (typeof value === "object" || typeof value === "function") &&
+      typeof value.then === "function"
+    );
   }
-  
+
   // 执行微任务
   #runMicroTask(func) {
     // node环境
-    if (typeof process === 'object' && typeof process.nextTick === 'function') {
+    if (typeof process === "object" && typeof process.nextTick === "function") {
       process.nextTick(func);
       return;
     }
     // 浏览器环境
-    if (typeof MutationObserver === 'function') {
+    if (typeof MutationObserver === "function") {
       const observer = new MutationObserver(func);
       // 构建文本结点
       const textNode = document.createTextNode(1);
@@ -78,7 +82,7 @@ class MyPromise {
   #runOne(callback, resolve, reject) {
     this.#runMicroTask(() => {
       // 回调函数不是函数
-      if (typeof callback !== 'function') {
+      if (typeof callback !== "function") {
         const settled = this.#state === FULFILLED ? resolve : reject;
         settled(this.#result);
         return;
@@ -87,7 +91,7 @@ class MyPromise {
       try {
         const data = callback(this.#result);
         // 判断回调函数返回值是Promise
-        if(this.#isPromiseLike(data)) {
+        if (this.#isPromiseLike(data)) {
           data.then(resolve, reject);
           return;
         }
@@ -95,8 +99,8 @@ class MyPromise {
       } catch (error) {
         reject(error);
       }
-    })
-  };
+    });
+  }
 
   #run() {
     if (this.#state === PENDING) return;
