@@ -2,7 +2,7 @@
 
 ### 1. 术语
 
-- promise: 是一个拥有 then 方法的对象或函数，其行为符合本规范
+- promise: 是一个拥有 then 方法的对象或函数
 - thenable: 是一个定义 then 方法的对象或函数
 - value: 任何 Javascript 的合法值（包括 undefined，thenable 或 promise）
 - exception: 是一个使用 throw 语句抛出的值
@@ -77,114 +77,475 @@
 ### 1. 构造函数
 
 ```js
-function Promise(executor) {
-  const self = this;
-  self.status = "pending";
-  self.value = undefined;
-  self.reason = undefined;
-  self.onFulfilledCallbacks = [];
-  self.onRejectedCallbacks = [];
+// 定义状态
+const PENDING = "pending";
+const FULFILLED = "fulfilled";
+const REJECTED = "rejected";
 
-  function resolve(value) {
-    if (self.status === "pending") {
-      self.status = "fulfilled";
-      self.value = value;
-      self.onFulfilledCallbacks.forEach((fn) => fn());
+class MyPromise {
+  #state = PENDING;
+  #result = undefined;
+
+  constructor(executor) {
+    // 成功回调
+    const resolve = (data) => {
+      if (this.#state !== PENDING) return;
+      this.#state = FULFILLED;
+      this.#result = data;
+    };
+
+    // 失败回调
+    const reject = (reason) => {
+      if (this.#state !== PENDING) return;
+      this.#state = REJECTED;
+      this.#result = reason;
+    };
+
+    try {
+      // 执行executor
+      executor(resolve, reject);
+    } catch (error) {
+      reject(error);
+    }
+  }
+}
+```
+
+上面代码可以发现无论是执行`resolve`还是`reject`，都是在改变 `promise` 的状态，所以用一个方法统一处理
+
+```js
+class MyPromise {
+  #state = PENDING;
+  #result = undefined;
+
+  constructor(executor) {
+    // 成功回调
+    const resolve = (data) => {
+      if (this.#state !== PENDING) return;
+      this.#changeState(FULFILLED, data);
+    };
+
+    // 失败回调
+    const reject = (reason) => {
+      if (this.#state !== PENDING) return;
+      this.#changeState(REJECTED, reason);
+    };
+
+    try {
+      // 执行executor
+      executor(resolve, reject);
+    } catch (error) {
+      reject(error);
     }
   }
 
-  function reject(reason) {
-    if (self.status === "pending") {
-      self.status = "rejected";
-      self.reason = reason;
-      self.onRejectedCallbacks.forEach((fn) => fn());
-    }
-  }
-
-  try {
-    executor(resolve, reject);
-  } catch (e) {
-    reject(e);
+  // 统一处理改变状态
+  #changeState(state, result) {
+    if (this.#state !== PENDING) return;
+    this.#state = state;
+    this.#result = result;
   }
 }
 ```
 
 ### 2. then 方法
 
+`then`方法接受两个参数，分别是`onFulfilled`成功的回调函数和`onRejected`失败的回调函数，它们都是可选的。`onFulfilled`和`onRejected`都是函数，并且最多只能被调用一次, `then`方法返回一个`promise`对象。
+
 ```js
-Promise.prototype.then = function(onFulfilled, onRejected) {
-  const self = this;
-  onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : value => value;
-  onRejected = typeof onRejected === 'function' ? onRejected : reason => { throw reason };
+class MyPromise {
+  #state = PENDING;
+  #result = undefined;
 
-  let promise2;
+  ...
 
-  if (self.status === 'fulfilled') {
-    promise2 = new Promise((resolve, reject) => {
-      	setTimeout(() => {
-          try {
-            let x = onFulfilled(self.value);
-            resolvePromise(promise2, x, resolve, reject);
-          } catch (e) {
-            reject(e);
-          }
-        }, 0);
-      });
+  // 统一处理改变状态
+  #changeState(state, result) {
+    if (this.#state !== PENDING) return;
+    this.#state = state;
+    this.#result = result;
   }
 
-  if (self.status === 'rejected') {
-    promise2 = new Promise((resolve, reject) => {
-      	setTimeout(() => {
-          try {
-            let x = onRejected(self.reason);
-            resolvePromise(promise2, x, resolve, reject);
-          } catch (e) {
-            reject(e);
-          }
-        }, 0);
+  then(onFulfilled, onRejected) {
+    return new MyPromise((resolve, reject) => {
+      if (this.#state === FULFILLED) {
+        // 成功的回调
+        onFulfilled(this.#result)
+      } else if (this.#state === REJECTED) {
+        // 失败的回调
+        onRejected(this.#result)
+      } else {
+        // 当前promise是挂起时的状态处理
+        ...
       }
+    })
   }
 }
+```
 
-function resolvePromise(promise2, x, resolve, reject) {
-  if (x === promise2) {
-    return reject(new TypeError('Chaining cycle detected for promise'));
+当我们在 then 方法中处理挂起的 `promise` 时，我们不知道 `promise` 的状态什么时候会改变，但是谁知道呢？我们在上面统一处理改变状态的方法`#changeState` 知道，但是该方法没办法直接拿到 then 里的参数，因此，我们可以使用一个变量来保存当前 then 方法的参数。
+
+保存之后在调用一个方法执行我们保存的参数，该方法可以拿到 promise 的状态，从而执行对应的回调函数。
+
+```js
+class MyPromise {
+  #state = PENDING;
+  #result = undefined;
+  #handlers = [];
+
+  ...
+
+  // 统一处理改变状态
+  #changeState(state, result) {
+    if (this.#state !== PENDING) return;
+    this.#state = state;
+    this.#result = result;
+    this.#run();
   }
 
-  let called;
+  #run(){
+    if(this.#state!==PENDING) return;
+    while(this.#handlers.length){
+      const {onFulfilled, onRejected, resolve, reject} = this.#handlers.shift();
+      // 处理成功的回调
+      if(this.#state === FULFILLED) {
+        if(typeof onFulfilled === 'function') {
+          try {
+            const data = onFulfilled(this.#result);
+            resolve(data);
+          } catch (error) {
+            reject(error);
+          }
+        } else {
+          resolve(this.#result);
+        }
 
-  if (x instanceof Promise) {
-    if (x.status === 'pending') {
-      x.then(value => {
-        resolvePromise(promise2, value, resolve, reject);
-      }, reason => {
-        reject(reason);
-      });
-    } else {
-      x.then(resolve, reject);
+      } else {
+        // 处理失败的回调
+        if(typeof onRejected === 'function') {
+          try {
+            const data = onRejected(this.#result);
+            resolve(data);
+          } catch (error) {
+            reject(error);
+          }
+        } else {
+          reject(this.#result);
+        }
     }
-  } else {
-    resolve(x);
   }
-  let called;
 
-  if (x instanceof Promise) {
-    if (x.status === 'pending') {
-      x.then(value => {
-        resolvePromise(promise2, value, resolve, reject);
-      }, reason => {
-        reject(reason);
-      });
-    } else {
-      x.then(resolve, reject);
+  then(onFulfilled, onRejected) {
+    return new MyPromise((resolve, reject) => {
+      this.#handlers.push({
+        onFulfilled,
+        onRejected,
+        resolve,
+        reject
+      })
+      this.#run();
+    })
+  }
+}
+```
+
+我们会发现在`#run` 方法中处理成功和失败的回调函数时，只是状态不一样，但是代码显得有些冗余，可以抽离`#run` 中的方法到单独的一个函数中处理。
+
+```js
+class MyPromise {
+  #state = PENDING;
+  #result = undefined;
+  #handlers = [];
+
+  ...
+
+  // 统一处理改变状态
+  #changeState(state, result) {
+    if (this.#state !== PENDING) return;
+    this.#state = state;
+    this.#result = result;
+    this.#run();
+  }
+
+  #runOne(callback, resolve, reject) {
+    // 传入的回调不是函数
+    if (typeof callback !== 'function') {
+      const settled = this.#state === FULFILLED ? resolve : reject;
+      settled(this.#result);
+      return;
     }
+    // 传入的回调是函数 执行
+    try {
+      const data = callback(this.#result);
+      resolve(data);
+    } catch(error) {
+      reject(error);
+    }
+  }
+
+  #run(){
+    if(this.#state!==PENDING) return;
+    while(this.#handlers.length){
+      const {onFulfilled, onRejected, resolve, reject} = this.#handlers.shift();
+      // 处理成功的回调
+      if(this.#state === FULFILLED) {
+        this.#runOne(onFulfilled, resolve, reject);
+      } else {
+        // 处理失败的回调
+        this.#runOne(onRejected, resolve, reject);
+    }
+  }
+
+  then(onFulfilled, onRejected) {
+    return new MyPromise((resolve, reject) => {
+      ...
+      this.#run();
+    })
+  }
+}
+```
+
+执行回调后返回的可能还是一个 `promise`，因此我们需要判断 data 是否是一个 `promise`，如果是的话，我们直接调用 then 方法，传递 resolve 和 reject 方法。
+
+```js
+class MyPromise {
+  #state = PENDING;
+  #result = undefined;
+  #handlers = [];
+
+  ...
+
+  // 判断是否是promise
+  #isPromiseLike(value){
+    return value !== null && (typeof value === 'object' || typeof value === 'function') && typeof value.then === 'function';
+  }
+
+  #runOne(callback, resolve, reject) {
+    // 传入的回调不是函数
+    if (typeof callback !== 'function') {
+      const settled = this.#state === FULFILLED ? resolve : reject;
+      settled(this.#result);
+      return;
+    }
+    // 传入的回调是函数 执行
+    try {
+      const data = callback(this.#result);
+      if (this.#isPromiseLike(data)) {
+        data.then(resolve, reject);
+      } else {
+        resolve(data);
+      }
+    } catch(error) {
+      reject(error);
+    }
+  }
+
+  ...
+
+```
+
+众所周知，`promise` 需要在微队列中执行，因此我们还需要将`#runOne` 里的内容放在微队列里执行，下面模拟一个微队列的执行方法。
+
+```js
+class MyPromise {
+  #state = PENDING;
+  #result = undefined;
+  #handlers = [];
+
+  ...
+
+  // 判断是否是promise
+  #isPromiseLike(value){
+    return value !== null && (typeof value === 'object' || typeof value === 'function') && typeof value.then === 'function';
+  }
+
+  // 模拟微队列
+  #runMicroTask(func){
+    // node 环境
+    if (typeof process === 'object' && typeof process.nextTick === 'function') {
+      process.nextTick(func);
+      return;
+    }
+    // 浏览器环境
+    if (typeof MutationObserver === 'function'){
+      // 创建一个观察器
+      const observer = new MutationObserver(func);
+      // 创建一个文本节点
+      const textNode = document.createTextNode('');
+      // 观察文本节点的变化
+      observer.observe(textNode, {
+        characterData: true
+      });
+      // 修改文本节点的内容
+      textNode.textContent = '1';
+      return;
+    }
+    // 其他情况...
+    setTimeout(func, 0);
+  }
+
+  #runOne(callback, resolve, reject) {
+    this.#runMicroTask(() => {
+      // 传入的回调不是函数
+      if (typeof callback !== 'function') {
+        const settled = this.#state === FULFILLED ? resolve : reject;
+        settled(this.#result);
+        return;
+      }
+      // 传入的回调是函数 执行
+      try {
+        const data = callback(this.#result);
+        if (this.#isPromiseLike(data)) {
+          data.then(resolve, reject);
+        } else {
+          resolve(data);
+        }
+      } catch(error) {
+        reject(error);
+      }
+    })
+  }
+
+  ...
+
+```
+
+完整版
+
+```js
+const PENDING = "pending";
+const FULFILLED = "fulfilled";
+const REJECTED = "rejected";
+
+class MyPromise {
+  #state = PENDING;
+  #result = undefined;
+  #handlers = [];
+
+  constructor(executor) {
+    // 成功回调
+    const resolve = (data) => {
+      this.#changeState(FULFILLED, data);
+    };
+
+    // 失败回调
+    const reject = (reason) => {
+      this.#changeState(REJECTED, reason);
+    };
+
+    try {
+      // 执行executor
+      executor(resolve, reject);
+    } catch (error) {
+      reject(error);
+    }
+  }
+
+  // 静态方法resolve
+  static resolve(value) {
+    if (value instanceof MyPromise) return value;
+    return new MyPromise((resolve) => {
+      resolve(value);
+    });
+  }
+
+  // 静态方法reject
+  static reject(reason) {
+    return new MyPromise((resolve, reject) => {
+      reject(reason);
+    });
+  }
+
+  // 改变状态
+  #changeState(state, result) {
+    if (this.#state !== PENDING) return;
+    this.#state = state;
+    this.#result = result;
+    this.#run();
+  }
+
+  // 判断是否是Promise
+  #isPromiseLike(value) {
+    return (
+      value !== null &&
+      (typeof value === "object" || typeof value === "function") &&
+      typeof value.then === "function"
+    );
+  }
+
+  // 执行微任务
+  #runMicroTask(func) {
+    // node环境
+    if (typeof process === "object" && typeof process.nextTick === "function") {
+      process.nextTick(func);
+      return;
+    }
+    // 浏览器环境
+    if (typeof MutationObserver === "function") {
+      const observer = new MutationObserver(func);
+      // 构建文本结点
+      const textNode = document.createTextNode(1);
+      observer.observe(textNode, { characterData: true });
+      // 修改文本结点内容，触发观察器执行
+      textNode.textContent = 2;
+      return;
+    }
+    setTimeout(func, 0);
+  }
+
+  #runOne(callback, resolve, reject) {
+    this.#runMicroTask(() => {
+      // 回调函数不是函数
+      if (typeof callback !== "function") {
+        const settled = this.#state === FULFILLED ? resolve : reject;
+        settled(this.#result);
+        return;
+      }
+      // 回调函数是函数
+      try {
+        const data = callback(this.#result);
+        // 判断回调函数返回值是Promise
+        if (this.#isPromiseLike(data)) {
+          data.then(resolve, reject);
+          return;
+        }
+        resolve(data);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  #run() {
+    if (this.#state === PENDING) return;
+    while (this.#handlers.length) {
+      const handler = this.#handlers.shift();
+      const { onFulfilled, onReject, resolve, reject } = handler;
+      if (this.#state === FULFILLED) {
+        this.#runOne(onFulfilled, resolve, reject);
+      } else {
+        this.#runOne(onReject, resolve, reject);
+      }
+    }
+  }
+
+  // then方法
+  then(onFulfilled, onReject) {
+    // 返回一个新的Promise
+    return new MyPromise((resolve, reject) => {
+      this.#handlers.push({
+        onFulfilled,
+        onReject,
+        resolve,
+        reject,
+      });
+      this.#run();
+    });
   }
 }
 ```
 
 ### 3. catch 方法
-
-catch 方法 的原理是什么
 
 ```js
 Promise.prototype.catch = function (onRejected) {
@@ -210,18 +571,21 @@ myPromise
   .finally(() => console.log("Cleanup work")); // 会被执行，因为 finally 块中的代码被执行了
 ```
 
-在这个示例中，`myPromise` 被拒绝，因此执行了 `catch` 块中的代码。然后，`finally` 块中的 `console.log` 函数被调用了，输出 "Cleanup work"。
+在这个示例中，`myPromise` 被拒绝，因此执行了 `catch` 块中的代码。然后，`finally` 块中的 `console.log` 函数被调用了，输出 "Cleanup work"。无论成功还是失败，`finally` 块中的代码都会被执行。
 
 #### 实现方式
 
 ```js
 Promise.prototype.finally = function (callback) {
   return this.then(
-    (value) => Promise.resolve(callback()).then(() => value),
-    (reason) =>
-      Promise.resolve(callback()).then(() => {
-        throw reason;
-      })
+    (value) => {
+      callback();
+      return value;
+    },
+    (reason) => {
+      callback();
+      throw reason;
+    })
   );
 };
 ```
