@@ -35,3 +35,7 @@
 
 * 题
   * [模拟MVVM](题/模拟MVVM/README.md)
+  * [指定范围定的随机数](题/指定范围定的随机数/README.md)
+  * [获取URL参数](题/获取URL参数/README.md)
+  * [数组扁平化](题/数组扁平化/README.md)
+  * [发布订阅](题/发布订阅/README.md)
