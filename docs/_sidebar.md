@@ -10,6 +10,9 @@
   * [requestAnimationFrame](JavaScript/requestAnimationFrame/README.md)
 
 * React
+  * [生命周期](React/生命周期/README.md)
+  * [事件机制](React/事件机制/README.md)
+  * [渲染流程](React/渲染流程/README.md)
   * [React Diff](React/React%20Diff/README.md)
   * [Hooks](React/Hooks/README.md)
   * [ReactFiber的理解](React/ReactFiber的理解/README.md)
