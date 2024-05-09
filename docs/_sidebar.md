@@ -46,6 +46,7 @@
   * [发布订阅](题/发布订阅/README.md)
   * [ES6模块与CommonJS模块](题/ES6模块与CommonJS模块/README.md)
   * [从输入url到也面展示的过程](题/从输入url到也面展示的过程/README.md)
+  * [消除异步的传染性](题/消除异步的传染性/README.md)
   
 * NPM
   * [如何发布一个npm包](NPM/如何发布一个npm包/READE.md)
